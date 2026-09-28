@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Safety AI</title>
+    <style>
+        :root {
+            --bg: #07111f;
+            --panel: rgba(13, 28, 48, 0.82);
+            --panel-2: rgba(20, 40, 64, 0.72);
+            --line: rgba(130, 190, 255, 0.16);
+            --text: #edf7ff;
+            --muted: #8da8c0;
+            --accent: #47d7ff;
+            --accent-2: #7c6cff;
+            --danger: #ff6b81;
+            --shadow: 0 30px 80px rgba(0, 0, 0, 0.38);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at 12% 18%, rgba(71, 215, 255, 0.14), transparent 28%),
+                radial-gradient(circle at 88% 82%, rgba(124, 108, 255, 0.15), transparent 30%),
+                var(--bg);
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+            background-size: 42px 42px;
+            mask-image: linear-gradient(to bottom, black, transparent);
+        }
+
+        .app {
+            width: min(1120px, 94vw);
+            height: min(780px, 92vh);
+            display: grid;
+            grid-template-columns: 290px 1fr;
+            border: 1px solid var(--line);
+            border-radius: 30px;
+            overflow: hidden;
+            background: rgba(7, 17, 31, 0.72);
+            backdrop-filter: blur(22px);
+            box-shadow: var(--shadow);
+        }
+
+        .sidebar {
+            padding: 30px 24px;
+            border-right: 1px solid var(--line);
+            background: linear-gradient(180deg, rgba(16, 35, 57, .8), rgba(7, 17, 31, .65));
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 36px;
+        }
+
+        .shield {
+            width: 46px;
+            height: 46px;
+            border-radius: 15px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: #06101b;
+            font-size: 22px;
+            box-shadow: 0 10px 28px rgba(71, 215, 255, .18);
+        }
+
+        .brand strong { display: block; font-size: 17px; }
+        .brand span { color: var(--muted); font-size: 12px; }
+
+        .side-title {
+            color: var(--muted);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 12px;
+        }
+
+        .topic {
+            padding: 12px 13px;
+            border: 1px solid transparent;
+            border-radius: 13px;
+            color: #b8cde0;
+            margin-bottom: 7px;
+            font-size: 13px;
+            background: rgba(255,255,255,.025);
+        }
+
+        .topic:hover {
+            border-color: var(--line);
+            background: rgba(71,215,255,.05);
+        }
+
+        .status {
+            margin-top: auto;
+            padding: 15px;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            background: rgba(255,255,255,.025);
+        }
+
+        .status-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #c7d9e8;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #44e59b;
+            box-shadow: 0 0 12px #44e59b;
+        }
+
+        .chat {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            padding: 24px 28px;
+            border-bottom: 1px solid var(--line);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 19px;
+            letter-spacing: -.3px;
+        }
+
+        .header p {
+            margin: 5px 0 0;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .badge {
+            padding: 8px 11px;
+            border: 1px solid rgba(71,215,255,.22);
+            border-radius: 999px;
+            color: var(--accent);
+            font-size: 11px;
+            background: rgba(71,215,255,.06);
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px;
+            scroll-behavior: smooth;
+        }
+
+        .welcome {
+            max-width: 650px;
+            margin: 9vh auto 0;
+            text-align: center;
+        }
+
+        .welcome .orb {
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 20px;
+            border-radius: 24px;
+            display: grid;
+            place-items: center;
+            font-size: 32px;
+            background: linear-gradient(135deg, rgba(71,215,255,.2), rgba(124,108,255,.2));
+            border: 1px solid var(--line);
+        }
+
+        .welcome h2 {
+            margin: 0 0 10px;
+            font-size: 30px;
+            letter-spacing: -1px;
+        }
+
+        .welcome p {
+            margin: 0 auto 22px;
+            max-width: 520px;
+            color: var(--muted);
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 9px;
+        }
+
+        .suggestion {
+            border: 1px solid var(--line);
+            background: rgba(255,255,255,.035);
+            color: #bdd2e5;
+            padding: 10px 13px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .suggestion:hover { border-color: rgba(71,215,255,.35); color: var(--text); }
+
+        .message {
+            display: flex;
+            margin-bottom: 18px;
+            animation: rise .2s ease;
+        }
+
+        .message.user { justify-content: flex-end; }
+
+        .bubble {
+            max-width: min(720px, 82%);
+            padding: 13px 16px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.65;
+            white-space: pre-wrap;
+        }
+
+        .message.bot .bubble {
+            background: var(--panel-2);
+            border: 1px solid var(--line);
+            border-top-left-radius: 5px;
+        }
+
+        .message.user .bubble {
+            background: linear-gradient(135deg, #167b99, #5545b7);
+            border-top-right-radius: 5px;
+            box-shadow: 0 12px 28px rgba(48, 82, 165, .18);
+        }
+
+        .composer {
+            padding: 18px 22px 22px;
+            border-top: 1px solid var(--line);
+        }
+
+        .input-wrap {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            padding: 10px;
+            border: 1px solid var(--line);
+            border-radius: 19px;
+            background: rgba(4, 12, 22, .72);
+        }
+
+        textarea {
+            flex: 1;
+            min-height: 44px;
+            max-height: 130px;
+            resize: none;
+            border: 0;
+            outline: 0;
+            background: transparent;
+            color: var(--text);
+            font: inherit;
+            font-size: 14px;
+            padding: 12px 10px;
+        }
+
+        textarea::placeholder { color: #607b93; }
+
+        button.send {
+            width: 44px;
+            height: 44px;
+            border: 0;
+            border-radius: 14px;
+            cursor: pointer;
+            color: #06101b;
+            background: linear-gradient(135deg, var(--accent), #86f0ff);
+            font-size: 17px;
+        }
+
+        button.send:disabled { opacity: .45; cursor: not-allowed; }
+
+        .hint {
+            text-align: center;
+            color: #557087;
+            font-size: 10px;
+            margin-top: 9px;
+        }
+
+        .typing {
+            display: inline-flex;
+            gap: 4px;
+            padding: 4px 2px;
+        }
+
+        .typing i {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #8aa8c1;
+            animation: blink 1s infinite;
+        }
+
+        .typing i:nth-child(2) { animation-delay: .15s; }
+        .typing i:nth-child(3) { animation-delay: .3s; }
+
+        @keyframes rise {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes blink {
+            0%, 80%, 100% { opacity: .25; transform: translateY(0); }
+            40% { opacity: 1; transform: translateY(-3px); }
+        }
+
+        @media (max-width: 760px) {
+            body { overflow: auto; }
+            .app {
+                width: 100%;
+                height: 100vh;
+                min-height: 650px;
+                border-radius: 0;
+                grid-template-columns: 1fr;
+            }
+            .sidebar { display: none; }
+            .messages { padding: 22px 17px; }
+            .header { padding: 18px; }
+            .composer { padding: 14px; }
+            .welcome { margin-top: 10vh; }
+            .welcome h2 { font-size: 25px; }
+        }
+    </style>
+</head>
+<body>
+    <main class="app">
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="shield">◈</div>
+                <div>
+                    <strong>Digital Safety AI</strong>
+                    <span>Learn. Protect. Stay Safe.</span>
+                </div>
+            </div>
+
+            <div class="side-title">Study areas</div>
+            <div class="topic">🔐 Password & MFA</div>
+            <div class="topic">🎣 Phishing & Scams</div>
+            <div class="topic">🛡️ Device Security</div>
+            <div class="topic">👁️ Privacy & Data</div>
+            <div class="topic">🌐 Safe Browsing</div>
+            <div class="topic">🧠 Cyber Awareness</div>
+
+            <div class="status">
+                <div class="status-row">
+                    <span class="dot"></span>
+                    <span>Safety assistant online</span>
+                </div>
+            </div>
+        </aside>
+
+        <section class="chat">
+            <header class="header">
+                <div>
+                    <h1>Digital Safety Assistant</h1>
+                    <p>Focused on cybersecurity awareness & online safety</p>
+                </div>
+                <div class="badge">GEMINI 3.1 FLASH-LITE</div>
+            </header>
+
+            <div class="messages" id="messages">
+                <div class="welcome" id="welcome">
+                    <div class="orb">🛡️</div>
+                    <h2>Stay one step ahead.</h2>
+                    <p>
+                        Ask me about passwords, phishing, privacy, scams, device security,
+                        safe browsing, or other digital-safety study topics.
+                    </p>
+                    <div class="suggestions">
+                        <button class="suggestion" data-question="How can I create a strong password?">Strong passwords</button>
+                        <button class="suggestion" data-question="How can I identify a phishing email?">Spot phishing</button>
+                        <button class="suggestion" data-question="Why is multi-factor authentication important?">MFA basics</button>
+                        <button class="suggestion" data-question="How can I protect my privacy online?">Online privacy</button>
+                    </div>
+                </div>
+            </div>
+
+            <form class="composer" id="chatForm">
+                <div class="input-wrap">
+                    <textarea id="messageInput" rows="1" placeholder="Ask a digital safety question..." autocomplete="off"></textarea>
+                    <button class="send" id="sendButton" type="submit" aria-label="Send">➜</button>
+                </div>
+                <div class="hint">Digital Safety AI answers only digital-safety and related study questions.</div>
+            </form>
+        </section>
+    </main>
+
+    <script>
+        const form = document.getElementById("chatForm");
+        const input = document.getElementById("messageInput");
+        const messages = document.getElementById("messages");
+        const sendButton = document.getElementById("sendButton");
+        const welcome = document.getElementById("welcome");
+
+        function addMessage(text, role) {
+            if (welcome) welcome.remove();
+
+            const row = document.createElement("div");
+            row.className = `message ${role}`;
+
+            const bubble = document.createElement("div");
+            bubble.className = "bubble";
+            bubble.textContent = text;
+
+            row.appendChild(bubble);
+            messages.appendChild(row);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        function addTyping() {
+            const row = document.createElement("div");
+            row.className = "message bot";
+            row.id = "typingMessage";
+            row.innerHTML = `
+                <div class="bubble">
+                    <span class="typing"><i></i><i></i><i></i></span>
+                </div>`;
+            messages.appendChild(row);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        function removeTyping() {
+            document.getElementById("typingMessage")?.remove();
+        }
+
+        async function sendMessage(text) {
+            const message = text.trim();
+            if (!message || sendButton.disabled) return;
+
+            addMessage(message, "user");
+            input.value = "";
+            input.style.height = "auto";
+            sendButton.disabled = true;
+            addTyping();
+
+            try {
+                const response = await fetch("/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message })
+                });
+
+                const data = await response.json();
+                removeTyping();
+
+                if (!response.ok) {
+                    addMessage(data.error || "Something went wrong.", "bot");
+                    return;
+                }
+
+                addMessage(data.reply, "bot");
+            } catch {
+                removeTyping();
+                addMessage("I couldn't connect to the server. Please try again.", "bot");
+            } finally {
+                sendButton.disabled = false;
+                input.focus();
+            }
+        }
+
+        form.addEventListener("submit", (event) => {
+            event.preventDefault();
+            sendMessage(input.value);
+        });
+
+        input.addEventListener("input", () => {
+            input.style.height = "auto";
+            input.style.height = Math.min(input.scrollHeight, 130) + "px";
+        });
+
+        input.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                form.requestSubmit();
+            }
+        });
+
+        document.querySelectorAll(".suggestion").forEach(button => {
+            button.addEventListener("click", () => sendMessage(button.dataset.question));
+        });
+    </script>
+</body>
+</html>
